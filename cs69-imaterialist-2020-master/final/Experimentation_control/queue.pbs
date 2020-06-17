@@ -1,0 +1,38 @@
+#!/bin/bash -l
+#PBS -N Expt_ControlModel
+#PBS -q gpuq
+#PBS -l nodes=1:ppn=10
+#PBS -l gpus=1
+#PBS -l feature=gpu
+#PBS -A NCCC
+#PBS -l walltime=12:00:00
+#PBS -M david.chen.gr@dartmouth.edu
+#PBS -m abe
+#PBS -j oe
+
+# (Optional) Show module available
+# module avail
+
+module swap python/3.6-Miniconda python/3.6-GPU
+module list
+
+# Change to the directory that the job was submitted from
+cd $PBS_O_WORKDIR
+echo $PWD
+
+# Begin virtual environment created
+source activate kaggle
+
+# Parse the PBS_GPUFILE to determine which GPU is assigned & unset CUDA_VISIBLE_DEVICES
+gpuNum=`cat $PBS_GPUFILE | sed -e 's/.*-gpu//g'`
+unset CUDA_VISIBLE_DEVICES
+
+CUDA_DEVICE=$gpuNum
+
+# Pass the GPU number as an argument to your program
+python3 train.py $gpuNum
+python3 predict.py $gpuNum
+
+# Upon completion:
+source deactivate kaggle
+exit 0
